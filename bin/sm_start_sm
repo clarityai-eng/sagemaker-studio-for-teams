@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+set -eo pipefail
+
+# check we are running on SageMaker
+if [ ! -f /opt/ml/metadata/resource-metadata.json ]; then
+    echo "This script should only been run on a SageMaker instance"
+    exit 1
+fi
+
+# use SageMaker execution role
+unset AWS_PROFILE
+
+# get SageMaker Execution Role
+domain_id=`cat /opt/ml/metadata/resource-metadata.json | jq -r '.DomainId'`
+user_profile_name=`cat /opt/ml/metadata/resource-metadata.json | jq -r '.UserProfileName'`
+if [ $user_profile_name == "null" ]; then
+    execution_role=`aws sagemaker describe-domain --domain-id $domain_id | jq -r '.DefaultUserSettings.ExecutionRole' | sed -n -e 's/^.*:role\///p'`
+else
+    execution_role=`aws sagemaker describe-user-profile --domain-id $domain_id --user-profile-name $user_profile_name | jq -r '.UserSettings.ExecutionRole' | sed -n -e 's/^.*:role\///p'`
+fi
+
+# create SSM activation
+response=`aws ssm create-activation --iam-role $execution_role` > /dev/null
+code=`echo $response | jq --raw-output '.ActivationCode'`
+id=`echo $response | jq --raw-output '.ActivationId'`
+
+# register activation
+amazon-ssm-agent -register -id $id -code $code -region $AWS_REGION -y > /dev/null
+instance_id=`aws ssm describe-instance-information | jq -r ".InstanceInformationList[] | select(.ActivationId==\"$id\") | .InstanceId"`
+
+# restart SSM Agent in tmux shell
+tmux kill-session -t amazon-ssm-agent 2> /dev/null || true
+AWS_SHARED_CREDENTIALS_FILE=$HOME/.aws/amazon_ssm_agent_credentials tmux new-session -d -s "amazon-ssm-agent" amazon-ssm-agent
+
+echo "Connect to this instance from your local machine with"
+echo "sm_start_local $instance_id"

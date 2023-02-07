@@ -1,0 +1,46 @@
+#!/bin/bash
+
+# install common build tools
+apt update && apt-get install build-essential -y
+
+# install Jupyter kernels
+for venv in $HOME/.local/share/virtualenvs/*/ ; do
+    source $venv/bin/activate
+    python -m ipykernel install --name `echo $venv | sed -n -r 's/.*\/(.*)-.*/\1/p'`
+    deactivate
+done || true
+
+# install pipenv
+python -m pip install --upgrade pip
+pip install pipenv
+
+# install direnv
+curl -sfL https://direnv.net/install.sh | bash
+touch ~/.profile
+sed -i '/# >>> direnv config >>>/,/# <<< direnv config <<</d' ~/.profile
+cat >> ~/.profile <<EOT
+# >>> direnv config >>>
+{
+    if command -v conda; then
+        eval "\$(conda shell.bash hook)"
+        conda activate
+    fi
+    if command -v direnv; then
+        eval "\$(direnv hook bash)"
+    fi
+} > /dev/null 2>&1
+# <<< direnv config <<<
+EOT
+
+# GitLab
+if [ -f ~/.aws-credential-helper.py ]; then
+    if [ ! -f /home/sagemaker-user/.aws-credential-helper.py ]; then
+        mkdir -p /home/sagemaker-user
+        cp ~/.aws-credential-helper.py /home/sagemaker-user/.aws-credential-helper.py
+    fi
+fi
+
+# on_start hook
+if [ -f ~/.on_start ]; then
+    ~/.on_start
+fi || true

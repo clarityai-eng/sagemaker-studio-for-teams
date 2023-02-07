@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+set -eo pipefail
+
+# check we are running on SageMaker
+if [ ! -f /opt/ml/metadata/resource-metadata.json ]; then
+    echo "This script should only been run on a SageMaker instance"
+    exit 1
+fi
+
+# install jq, OpenSSH and tmux
+apt-get update > /dev/null
+apt-get install jq openssh-server tmux -y > /dev/null
+sed -i "/AuthenticationMethods/d" /etc/ssh/sshd_config
+echo "AuthenticationMethods publickey" >> /etc/ssh/sshd_config
+/etc/init.d/ssh restart > /dev/null
+
+# install AWS Session Manager plugin
+if ! command -v session-manager-plugin &> /dev/null; then
+    curl -sS -o /tmp/session-manager-plugin.deb "https://s3.amazonaws.com/session-manager-downloads/plugin/latest/ubuntu_64bit/session-manager-plugin.deb"
+    dpkg -i /tmp/session-manager-plugin.deb > /dev/null
+fi
+
+# install AWS SSM Agent
+if ! command -v amazon-ssm-agent &> /dev/null; then
+    curl -sS -o /tmp/amazon-ssm-agent.deb "https://s3.$AWS_REGION.amazonaws.com/amazon-ssm-$AWS_REGION/latest/debian_amd64/amazon-ssm-agent.deb"
+    dpkg -i /tmp/amazon-ssm-agent.deb > /dev/null
+    cp /etc/amazon/ssm/seelog.xml.template /etc/amazon/ssm/seelog.xml
+fi
+
+echo "You need only run this once per container. To start a connection:"
+echo "sm_start_sm"

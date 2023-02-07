@@ -1,0 +1,11 @@
+.terraform*
+terraform.*
+clarity_sagemaker_studio.egg-info
+build
+builds
+__pycache__
+.ipynb_checkpoints
+Pipfile.lock
+.env
+.envrc
+/terragrunt.hcl

@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+set -eo pipefail
+
+# check we are running on SageMaker
+if [ ! -f /opt/ml/metadata/resource-metadata.json ]; then
+    echo "This script should only been run on a SageMaker instance"
+    exit 1
+fi
+
+# use SageMaker execution role
+unset AWS_PROFILE
+
+# install Docker and jq
+apt-get update > /dev/null
+apt-get install docker.io jq -y > /dev/null
+
+# install AWS Session Manager plugin
+if ! command -v session-manager-plugin &> /dev/null; then
+    curl -sS -o /tmp/session-manager-plugin.deb "https://s3.amazonaws.com/session-manager-downloads/plugin/latest/ubuntu_64bit/session-manager-plugin.deb"
+    dpkg -i /tmp/session-manager-plugin.deb > /dev/null
+fi
+
+# get bastion connection details
+connection=`aws secretsmanager get-secret-value --secret-id sagemaker-bastion-connection | jq -r '.SecretString'`
+instance_id=`echo $connection | jq -r '.instance_id'`
+mkdir -p ~/.ssh
+echo $connection | jq -r '.private_key' | base64 -di > ~/.ssh/bastion.pem
+chmod 600 ~/.ssh/bastion.pem
+
+# add SSH config
+touch ~/.ssh/config
+sed -i '/# >>> SageMaker bastion config >>>/,/# <<< SageMaker bastion config <<</d' ~/.ssh/config
+cat >> ~/.ssh/config <<EOT
+# >>> SageMaker bastion config >>>
+Host bastion
+    User ubuntu
+    IdentityFile ~/.ssh/bastion.pem
+    StrictHostKeyChecking accept-new
+    ProxyCommand sh -c "env -u AWS_PROFILE aws ssm start-session --target $instance_id --document-name AWS-StartSSHSession --parameters 'portNumber=%p'"
+# <<< SageMaker bastion config <<<
+EOT
+
+# configure docker to point to bastion
+sed -i '/export DOCKER_HOST=ssh:\/\/bastion/d' ~/.profile
+echo 'export DOCKER_HOST=ssh://bastion' >> ~/.profile
+
+if [ -z $DOCKER_HOST ] || [ $DOCKER_HOST != ssh://bastion ]; then
+    echo "You will need to restart your shell to use Docker or type in this shell:"
+    echo "export DOCKER_HOST=ssh://bastion"
+fi

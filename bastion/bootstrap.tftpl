@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+set -eox pipefail
+sudo apt update 
+
+# mount EFS
+sudo DEBIAN_FRONTEND=noninteractive apt-get install nfs-common -y
+sudo mkdir /mnt/efs
+echo \
+  "${efs_ip}:/ /mnt/efs nfs nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport 0 0" \
+  | sudo tee -a /etc/fstab
+
+# install Docker engine
+sudo mkdir -p /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+  $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+sudo apt-get update
+sudo DEBIAN_FRONTEND=noninteractive apt-get install docker-ce docker-ce-cli containerd.io docker-compose-plugin -y
+
+# add ubuntu user to docker group
+sudo usermod -aG docker ubuntu
+
+# periodically prune stopped containers, dangling and unused images older than 1 week
+echo '#!/bin/bash
+docker system prune -af --filter "until=$((7*24))h"' | sudo tee /etc/cron.daily/docker-prune
+sudo chmod +x /etc/cron.daily/docker-prune
+
+# run du on /mnt/efs daily
+echo '#!/bin/bash
+du -h -d1 /mnt/efs/ > /root/du' | sudo tee /etc/cron.daily/run-du
+sudo chmod +x /etc/cron.daily/run-du
+
+# reboot
+sudo reboot

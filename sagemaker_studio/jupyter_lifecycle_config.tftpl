@@ -1,0 +1,67 @@
+#!/bin/bash
+set -eux
+
+# adapted from https://github.com/aws-samples/sagemaker-studio-lifecycle-config-examples/blob/main/scripts/set-git-credentials/on-jupyter-server-start.sh
+
+YOUR_USER_NAME="${user_name}"
+YOUR_EMAIL_ADDRESS="${email}"
+
+git config --global user.name "$YOUR_USER_NAME"
+git config --global user.email "$YOUR_EMAIL_ADDRESS"
+
+GIT_PROVIDER="${git_provider}"
+GIT_USERNAME="${user_name}"
+AWS_REGION="${region}"
+AWS_SECRET_NAME="${secret_name}"
+AWS_SECRET_KEY="GITLAB_PAT"
+
+cat > ~/.aws-credential-helper.py <<EOL
+#!/usr/bin/env python
+import os
+
+# use SageMaker execution role
+if "AWS_PROFILE" in os.environ:
+    del os.environ["AWS_PROFILE"]
+
+import sys
+import json
+import boto3
+import botocore
+
+GIT_PROVIDER='$GIT_PROVIDER'
+GIT_USERNAME='$GIT_USERNAME'
+AWS_REGION='$AWS_REGION'
+AWS_SECRET_NAME='$AWS_SECRET_NAME'
+AWS_SECRET_KEY='$AWS_SECRET_KEY'
+
+if len(sys.argv) < 2 or sys.argv[1] != 'get':
+    exit(0)
+credentials = {}
+for line in sys.stdin:
+    if line.strip() == "":
+        break
+    key, value = line.split('=')[0:2]
+    credentials[key.strip()] = value.strip()
+credentials['username'] = GIT_USERNAME
+if credentials.get('host', '') == GIT_PROVIDER:
+    client = boto3.client('secretsmanager', region_name=AWS_REGION)
+    try:
+        response = client.get_secret_value(SecretId=AWS_SECRET_NAME)
+    except botocore.exceptions.NoCredentialsError:
+        os.environ["AWS_SHARED_CREDENTIALS_FILE"] = f"{os.environ['HOME']}/.aws/amazon_ssm_agent_credentials"
+        client = boto3.Session().client('secretsmanager', region_name=AWS_REGION)
+        response = client.get_secret_value(SecretId=AWS_SECRET_NAME)
+    except botocore.exceptions.ClientError as e:
+        exit(1)
+    if 'SecretString' in response:
+        secret = response['SecretString']
+        secret_dict = json.loads(secret)
+        if AWS_SECRET_KEY in secret_dict:
+            credentials['password'] = secret_dict[AWS_SECRET_KEY]
+for key, value in credentials.items():
+    print('{}={}'.format(key, value))
+EOL
+
+chmod +x ~/.aws-credential-helper.py
+git config --global credential.helper ~/.aws-credential-helper.py
+pip install boto3
