@@ -163,13 +163,13 @@ The connection is established via AWS Secure Systems Manager (SSM) which not onl
 Clone this repository from a SageMaker container
 
 ```bash
-git clone https://gitlab.clarity.ai/product/datascience/clarity_sagemaker_studio.git
+git clone https://github.com/clarityai-eng/sagemaker-studio-for-teams.git
 ```
 
 and from a console on a KernelGateway container (with a Ubuntu/Debian image) install the package with
 
 ```bash
-cd clarity_sagemaker_studio
+cd sagemaker-studio-for-teams
 pip install .
 ```
 
