@@ -29,6 +29,7 @@ data "external" "efs" {
     "python",
     "${path.module}/get_efs_ip.py",
     var.profile,
+    var.region,
     var.sagemaker_domain_name,
     data.aws_subnet.this.availability_zone
   ]
@@ -57,7 +58,7 @@ resource "aws_instance" "ec2" {
       -o ProxyCommand="aws ssm start-session --target %h --document-name AWS-StartSSHSession --parameters portNumber=%p" \
       <<-ENDSSH
         ${templatefile("${path.module}/bootstrap.tftpl", {
-          efs_ip = data.external.efs.result.ip
+            efs_ip = data.external.efs.result.ip
         })}
       ENDSSH
     ENDCMD

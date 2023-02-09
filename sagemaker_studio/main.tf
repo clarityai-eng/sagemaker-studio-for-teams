@@ -113,7 +113,7 @@ resource "aws_security_group_rule" "bastion-efs" {
 
 resource "null_resource" "add_efs_security_group" {
   provisioner "local-exec" {
-    command = "python add_efs_security_group.py ${var.profile} ${aws_sagemaker_domain.this.home_efs_file_system_id} ${aws_security_group.efs.id}"
+    command = "python add_efs_security_group.py ${var.profile} ${var.region} ${aws_sagemaker_domain.this.home_efs_file_system_id} ${aws_security_group.efs.id}"
   }
 
   depends_on = [

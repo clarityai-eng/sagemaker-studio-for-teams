@@ -1,20 +1,19 @@
-# python get_efs_ip profile domain_name az_name
+# python get_efs_ip.py profile region domain_name az_name
 
 import json
-import os
 import sys
 
 import boto3
 
 try:
-    os.environ["AWS_PROFILE"] = sys.argv[1]
-    sm_client = boto3.client("sagemaker")
-    efs_client = boto3.client("efs")
+    session = boto3.Session(profile_name=sys.argv[1], region_name=sys.argv[2])
+    sm_client = session.client("sagemaker")
+    efs_client = session.client("efs")
     domains = sm_client.list_domains()["Domains"]
     for domain in domains:
-        if domain["DomainName"] == sys.argv[2]:
+        if domain["DomainName"] == sys.argv[3]:
             break
-    assert domain["DomainName"] == sys.argv[2]
+    assert domain["DomainName"] == sys.argv[4]
     file_system_id = sm_client.describe_domain(DomainId=domain["DomainId"])[
         "HomeEfsFileSystemId"
     ]
@@ -22,9 +21,9 @@ try:
         "MountTargets"
     ]
     for mount_target in mount_targets:
-        if mount_target["AvailabilityZoneName"] == sys.argv[3]:
+        if mount_target["AvailabilityZoneName"] == sys.argv[4]:
             break
-    assert mount_target["AvailabilityZoneName"] == sys.argv[3]
+    assert mount_target["AvailabilityZoneName"] == sys.argv[4]
     print(json.dumps({"ip": mount_target["IpAddress"]}))
 except:
     print(json.dumps({"ip": ""}))
