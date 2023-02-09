@@ -279,7 +279,7 @@ inputs = {
 }
 ```
 
-You should also specify here the `vpc`, `subnet` and `subnets`. Code is provided to create a new VPC if necessary, but is commented out in the `terragrunt.hcl` files.
+You will need to have created an IAM user with the same name as the `gitlab_name` in the `root_account`.
 
 Creating `sagemaker_police` will automatically email all the users asking them to confirm their email address, so you might want to override the `users` variable in `terraform.tfars` in the `sagemaker_police` directory while testing.
 
