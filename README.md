@@ -283,7 +283,7 @@ You will need to have created an IAM user with the same name as the `gitlab_name
 
 Creating `sagemaker_police` will automatically email all the users asking them to confirm their email address, so you might want to override the `users` variable in `terraform.tfars` in the `sagemaker_police` directory while testing.
 
-In order to be able to SSH into SageMaker instances, the AWS account needs to be configured to have an "advanced activation tier". A one-time command to do achieve this is
+If you have not already done so, run the "quick start" for the SSM in the AWS console. In order to be able to SSH into SageMaker instances, the AWS account needs to be configured to have an "advanced activation tier". A one-time command to do achieve this is
 
 ```bash
 aws ssm update-service-setting \
