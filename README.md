@@ -279,7 +279,7 @@ inputs = {
 }
 ```
 
-You will need to have created an IAM user with the same name as the `gitlab_name` in the `root_account`.
+You will need to have created IAM users with the same names as their `gitlab_name`.
 
 Creating `sagemaker_police` will automatically email all the users asking them to confirm their email address, so you might want to override the `users` variable in `terraform.tfars` in the `sagemaker_police` directory while testing.
 
