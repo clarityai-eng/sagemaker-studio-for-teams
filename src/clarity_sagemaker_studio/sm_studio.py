@@ -181,17 +181,18 @@ def main():
     )
     args = parser.parse_args()
 
-    root_sts_client = boto3.Session(profile_name="root").client("sts")
+    session = boto3.Session(profile_name="sagemaker")
+    sts_client = session.client("sts")
     if args.user_profile_name is None:
         user_profile_name = re.findall(
-            r"::.*:user/(.*)", root_sts_client.get_caller_identity()["Arn"]
+            r"::.*:assumed-role/(.*)/", sts_client.get_caller_identity()["Arn"]
         )[0]
     else:
         user_profile_name = args.user_profile_name
 
     user_profile_name = user_profile_name.replace(".", "-")
     sagemaker_studio = SageMakerStudio(
-        session=boto3.Session(profile_name="sagemaker"),
+        session=session,
         user_profile_name=user_profile_name,
         domain_name="datascience" if args.domain_name is None else args.domain_name,
     )
