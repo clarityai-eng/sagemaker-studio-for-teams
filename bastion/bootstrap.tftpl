@@ -8,6 +8,7 @@ sudo mkdir /mnt/efs
 echo \
   "${efs_ip}:/ /mnt/efs nfs nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport 0 0" \
   | sudo tee -a /etc/fstab
+sudo mount /mnt/efs
 
 # install Docker engine
 sudo mkdir -p /etc/apt/keyrings
@@ -31,6 +32,3 @@ echo '#!/bin/bash
 du -h -d1 /mnt/efs/ > /root/du' | sudo tee /etc/cron.daily/run-du
 sudo chmod +x /etc/cron.daily/run-du
 sudo du -h -d1 /mnt/efs/ | sudo tee /root/du
-
-# reboot
-sudo reboot
