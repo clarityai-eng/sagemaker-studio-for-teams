@@ -13,7 +13,7 @@ try:
     for domain in domains:
         if domain["DomainName"] == sys.argv[3]:
             break
-    assert domain["DomainName"] == sys.argv[4]
+    assert domain["DomainName"] == sys.argv[3]
     file_system_id = sm_client.describe_domain(DomainId=domain["DomainId"])[
         "HomeEfsFileSystemId"
     ]
