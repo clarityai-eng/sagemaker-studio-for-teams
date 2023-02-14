@@ -195,7 +195,7 @@ You will then be able to SSH into your KernelGateway container from your local m
 
 ### Remote debugging
 
-Visual Studio Code requires an explicit entry in the SSH `config` file for the instance you want to connect to. If you do not already have the Remote Explorer extension installed, you can get it [here](https://marketplace.visualstudio.com/items?itemName=ms-vscode.remote-explorer). Open the Remote Explorer extension, click on + to the right pf SSH. Then type the `ssh root@mi-...` and choose an appropriate SSH `config` file.
+Visual Studio Code requires an explicit entry in the SSH `config` file for the instance you want to connect to. If you do not already have the Remote Explorer extension installed, you can get it [here](https://marketplace.visualstudio.com/items?itemName=ms-vscode.remote-explorer). Open the Remote Explorer extension, click on + to the right of SSH. Then type the `ssh root@mi-...` and choose an appropriate SSH `config` file.
 
 PyCharm Professional can also be used for remote debugging but needs a larger instance than `ml.t3.medium` to work.
 
