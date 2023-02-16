@@ -6,7 +6,7 @@ This repo contains terraform code to spin up a SageMaker Studio domain and confi
 
 SageMaker Studio has three concepts which are important to understand: *instances*, *apps* and *sessions*. These can be seen by clicking the "stop button" logo in JupyterLab.
 
-* An *instance* corresponds to an EC2 machine - for example, a `ml.ts.large`. The `ml` prefix means that it is a SageMaker instance (which are between 15% and 40% more expensive than their vanilla EC2 equivalents). At any one time only one instance per type can be running.
+* An *instance* corresponds to an EC2 machine - for example, a `ml.t3.large`. The `ml` prefix means that it is a SageMaker instance (which are between 15% and 40% more expensive than their vanilla EC2 equivalents). At any one time only one instance per type can be running.
 
 * An *app* is a container running a particular image. JupyterLab itself is a JupyterServer app running on a free lightweight instance. All the running apps that appear in the list in JupyterLab are KernelGateway apps. These are intended for running notebooks, terminals or jobs.
 
