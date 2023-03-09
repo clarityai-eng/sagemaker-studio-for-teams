@@ -29,6 +29,13 @@ resource "aws_sagemaker_domain" "this" {
 
   default_space_settings {
     execution_role = aws_iam_role.sagemaker_default_execution_role.arn
+    kernel_gateway_app_settings {
+      default_resource_spec {
+        instance_type        = "ml.t3.medium"
+        lifecycle_config_arn = aws_sagemaker_studio_lifecycle_config.kernel["pipenv"].arn
+      }
+      lifecycle_config_arns = [for lifecycle_config in aws_sagemaker_studio_lifecycle_config.kernel : lifecycle_config.arn]
+    }    
   }
 
   retention_policy {
