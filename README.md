@@ -116,7 +116,7 @@ pip install ~/sagemaker-studio-for-teams
 
 ### Python environments
 
-At [Clarity](https://clarity.ai/) we use `pipenv` to manage Python environments. If you prefer to use a different package manager like `poetry`, say, then it is straightforward to adapt the script in `sageamaker_studio/kernel_lifecycle_configs`.
+At [Clarity AI](https://clarity.ai/) we use `pipenv` to manage Python environments. If you prefer to use a different package manager like `poetry`, say, then it is straightforward to adapt the script in `sageamaker_studio/kernel_lifecycle_configs`.
 
 A typical workflow when working with a new project would be to clone the repo in the Jupyter container and spin up a KernelGateway terminal (with "Open image terminal" or from a notebook) using an image with the appropriate version of Python (and any other system packages you may need) installed. Then run
 
