@@ -3,6 +3,7 @@ import re
 from time import sleep
 
 import boto3
+import botocore
 
 from .utils import Bastion
 
@@ -35,18 +36,24 @@ class SageMakerStudio:
 
     def get_apps(self, user_profile_name, space_name=None):
         if space_name is None:
-            return self.client.list_apps(
+            return self.with_paging(
+                "Apps",
+                self.client.list_apps,
                 UserProfileNameEquals=user_profile_name,
                 DomainIdEquals=self.domain_id,
-            )["Apps"]
-        return self.client.list_apps(
+            )
+        return self.with_paging(
+            "Apps",
+            self.client.list_apps,
             SpaceNameEquals=space_name,
             DomainIdEquals=self.domain_id,
-        )["Apps"]
+        )
 
     def up(self, space_name=None):
         if space_name is not None:
-            spaces = self.client.list_spaces(DomainIdEquals=self.domain_id)["Spaces"]
+            spaces = self.with_paging(
+                "Spaces", self.client.list_spaces, DomainIdEquals=self.domain_id
+            )
             if space_name not in [space["SpaceName"] for space in spaces]:
                 self.client.create_space(DomainId=self.domain_id, SpaceName=space_name)
                 print(f"Created space {space_name}")
@@ -108,6 +115,15 @@ class SageMakerStudio:
             input("This will delete all the files in the space, are you sure? (y/n) ")
             == "y"
         ):
+            try:
+                self.client.delete_app(
+                    DomainId=self.domain_id,
+                    SpaceName=space_name,
+                    AppName="default",
+                    AppType="JupyterServer",
+                )
+            except botocore.exceptions.ClientError:
+                pass
             self.client.delete_space(SpaceName=space_name, DomainId=self.domain_id)
             uid = self.client.describe_space(
                 DomainId=self.domain_id, SpaceName=space_name
@@ -138,9 +154,11 @@ class SageMakerStudio:
         }
         if "" in du:
             print(f"Total EFS {du['']}")
-        for user_profile in self.client.list_user_profiles(
-            DomainIdEquals=self.domain_id
-        )["UserProfiles"]:
+        for user_profile in self.with_paging(
+            "UserProfiles",
+            self.client.list_user_profiles,
+            DomainIdEquals=self.domain_id,
+        ):
             user_profile_name = user_profile["UserProfileName"]
             uid = self.client.describe_user_profile(
                 DomainId=self.domain_id, UserProfileName=user_profile_name
@@ -148,7 +166,9 @@ class SageMakerStudio:
             print(f"User: {user_profile_name} ({du.get(uid, '0K')})")
             self.status(user_profile_name=user_profile_name, space_name=None, all=True)
 
-        for space in self.client.list_spaces(DomainIdEquals=self.domain_id)["Spaces"]:
+        for space in self.with_paging(
+            "Spaces", self.client.list_spaces, DomainIdEquals=self.domain_id
+        ):
             space_name = space["SpaceName"]
             uid = self.client.describe_space(
                 DomainId=self.domain_id, SpaceName=space_name
@@ -157,8 +177,18 @@ class SageMakerStudio:
             self.status(user_profile_name=None, space_name=space_name, all=True)
 
     def list_spaces(self):
-        for space in self.client.list_spaces(DomainIdEquals=self.domain_id)["Spaces"]:
+        for space in self.with_paging(
+            "Spaces", self.client.list_spaces, DomainIdEquals=self.domain_id
+        ):
             print(space["SpaceName"])
+
+    @staticmethod
+    def with_paging(key, func, **kwargs):
+        response = func(**kwargs)
+        yield from response[key]
+        while "NextToken" in response:
+            response = func(NextToken=response["NextToken"], **kwargs)
+            yield from response[key]
 
 
 def main():
