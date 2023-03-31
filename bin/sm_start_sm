@@ -10,6 +10,9 @@ fi
 # use SageMaker execution role
 unset AWS_PROFILE
 
+# the default profile overrides SageMaker execution role
+aws sts get-caller-identity --profile default > /dev/null 2>&1 && { echo "Please remove the default profile from ~/.aws/credentials and config"; exit 1; } || true
+
 # get SageMaker Execution Role
 domain_id=`cat /opt/ml/metadata/resource-metadata.json | jq -r '.DomainId'`
 user_profile_name=`cat /opt/ml/metadata/resource-metadata.json | jq -r '.UserProfileName'`

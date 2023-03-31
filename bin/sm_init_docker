@@ -10,6 +10,9 @@ fi
 # use SageMaker execution role
 unset AWS_PROFILE
 
+# the default profile overrides SageMaker execution role
+aws sts get-caller-identity --profile default > /dev/null 2>&1 && { echo "Please remove the default profile from ~/.aws/credentials and config"; exit 1; } || true
+
 # install Docker and jq
 apt-get update > /dev/null
 apt-get install docker.io jq -y > /dev/null
