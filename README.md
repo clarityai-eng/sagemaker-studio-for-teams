@@ -339,3 +339,48 @@ Sometimes it is handy to be able to run a lightweight Jupyter notebook without s
 3) Open the Jupyter notebook server in a browser
 
    Navigate to `https://<domain>.studio.<region>.sagemaker.aws/jupyter/default/proxy/absolute/8889/?token=<token>` where `<token>` is the token output in the previous step.
+
+
+## Appendix: connecting Visual Studio Code to SageMaker jobs
+
+Although the purpose of this repo is to make SageMaker Studio a comfortable environment for development whether you are doing Machine Learning or not, it may well be the case that you are launching SageMaker ML jobs and want to debug them. This is possible with a few small changes to the code that is packaged up to run in the job.
+
+1) Add `git+https://github.com/clarityai-eng/sagemaker-studio-for-teams.git` to the `requirements.txt` file.
+
+2) Add the following lines to the entry point of your script:
+
+``` python
+from clarity_sagemaker_studio import debug_job
+debug_job(5678)
+```
+
+3) Add a `.vscode` directory with the following `launch.json` file (this will save you from having to do this each time you connect):
+
+``` json
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: Attach using Process Id",
+            "type": "python",
+            "request": "attach",
+            "processId": "${command:pickProcess}",
+            "port": 5678,
+            "justMyCode": false
+        }
+    ]
+}
+```
+
+3) Launch the job and inspect the logs. You should see something like
+
+```
+Connect to this instance from your local machine with
+sm_start_local mi-...
+Waiting for debugger attach on port 5678
+```
+
+4) Connect Visual Studio Code following the steps in the "Remote Debugging" section. Open the `/opt/ml/code` folder and use the debbuger to attach to your process (you will need to install the `Python` extension each time).
