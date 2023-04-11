@@ -1,6 +1,7 @@
-VERSION = "0.1.0"
+VERSION = "0.1.1"
 
 import sys
+from .utils import debug_job
 
 
 # don't show stack traceback

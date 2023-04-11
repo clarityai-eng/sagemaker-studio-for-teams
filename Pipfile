@@ -6,6 +6,7 @@ name = "pypi"
 [packages]
 boto3 = ">=1.26.34"
 clarity-sagemaker-studio = {path = "."}
+debugpy = ">=1.6.7"
 
 [dev-packages]
 black = "*"

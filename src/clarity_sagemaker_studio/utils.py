@@ -1,5 +1,7 @@
 import json
 import os
+import re
+import subprocess
 from base64 import b64decode
 from time import sleep
 
@@ -42,3 +44,19 @@ class Bastion:
                 break
             sleep(1)
         return response["CommandInvocations"][0]["CommandPlugins"][0]["Output"]
+
+
+def debug_job(port=5678):
+    import boto3
+    import debugpy
+    import sagemaker
+
+    session = boto3.Session(region_name=os.environ["AWS_REGION"])
+    sagemaker_session = sagemaker.Session(boto_session=session)
+    role = sagemaker.get_execution_role(sagemaker_session=sagemaker_session)
+    subprocess.run(f"sm_init_sm --force", shell=True)
+    subprocess.run(f"sm_start_sm {re.findall(r'.*/(.*)', role)[0]}", shell=True)
+    debugpy.listen(port)
+    print(f"Waiting for debugger attach on port {port}")
+    debugpy.wait_for_client()
+    debugpy.breakpoint()
