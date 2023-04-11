@@ -2,14 +2,16 @@
 set -eo pipefail
 
 # check we are running on SageMaker
-if [ ! -f /opt/ml/metadata/resource-metadata.json ]; then
-    echo "This script should only been run on a SageMaker instance"
-    exit 1
+if [ "$1" != "--force" ]; then
+    if [ ! -f /opt/ml/metadata/resource-metadata.json ]; then
+        echo "This script should only been run on a SageMaker instance"
+        exit 1
+    fi
 fi
 
 # install jq, OpenSSH and tmux
-apt-get update > /dev/null
-apt-get install jq openssh-server tmux -y > /dev/null
+apt-get update --allow-insecure-repositories > /dev/null || true
+apt-get install jq openssh-server tmux --allow-unauthenticated -y > /dev/null
 sed -i "/AuthenticationMethods/d" /etc/ssh/sshd_config
 echo "AuthenticationMethods publickey" >> /etc/ssh/sshd_config
 /etc/init.d/ssh restart > /dev/null

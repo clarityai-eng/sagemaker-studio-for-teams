@@ -2,9 +2,11 @@
 set -eo pipefail
 
 # check we are running on SageMaker
-if [ ! -f /opt/ml/metadata/resource-metadata.json ]; then
-    echo "This script should only been run on a SageMaker instance"
-    exit 1
+if [ $# -eq 0 ]; then
+    if [ ! -f /opt/ml/metadata/resource-metadata.json ]; then
+        echo "This script should only been run on a SageMaker instance"
+        exit 1
+    fi
 fi
 
 # use SageMaker execution role
@@ -14,22 +16,26 @@ unset AWS_PROFILE
 aws sts get-caller-identity --profile default > /dev/null 2>&1 && { echo "Please remove the default profile from ~/.aws/credentials and config"; exit 1; } || true
 
 # get SageMaker Execution Role
-domain_id=`cat /opt/ml/metadata/resource-metadata.json | jq -r '.DomainId'`
-user_profile_name=`cat /opt/ml/metadata/resource-metadata.json | jq -r '.UserProfileName'`
-if [ $user_profile_name == "null" ]; then
-    execution_role=`aws sagemaker describe-domain --domain-id $domain_id | jq -r '.DefaultUserSettings.ExecutionRole' | sed -n -e 's/^.*:role\///p'`
+if [ $# -eq 0 ]; then
+    domain_id=`cat /opt/ml/metadata/resource-metadata.json | jq -r '.DomainId'`
+    user_profile_name=`cat /opt/ml/metadata/resource-metadata.json | jq -r '.UserProfileName'`
+    if [ $user_profile_name == "null" ]; then
+        execution_role=`aws sagemaker describe-domain --domain-id $domain_id | jq -r '.DefaultUserSettings.ExecutionRole' | sed -n -e 's/^.*:role\///p'`
+    else
+        execution_role=`aws sagemaker describe-user-profile --domain-id $domain_id --user-profile-name $user_profile_name | jq -r '.UserSettings.ExecutionRole' | sed -n -e 's/^.*:role\///p'`
+    fi
 else
-    execution_role=`aws sagemaker describe-user-profile --domain-id $domain_id --user-profile-name $user_profile_name | jq -r '.UserSettings.ExecutionRole' | sed -n -e 's/^.*:role\///p'`
+    execution_role=sagemaker/$1
 fi
 
 # create SSM activation
-response=`aws ssm create-activation --iam-role $execution_role` > /dev/null
+response=`aws ssm create-activation --iam-role $execution_role --region $AWS_REGION` > /dev/null
 code=`echo $response | jq --raw-output '.ActivationCode'`
 id=`echo $response | jq --raw-output '.ActivationId'`
 
 # register activation
 amazon-ssm-agent -register -id $id -code $code -region $AWS_REGION -y > /dev/null
-instance_id=`aws ssm describe-instance-information | jq -r ".InstanceInformationList[] | select(.ActivationId==\"$id\") | .InstanceId"`
+instance_id=`aws ssm describe-instance-information --region $AWS_REGION | jq -r ".InstanceInformationList[] | select(.ActivationId==\"$id\") | .InstanceId"`
 
 # restart SSM Agent in tmux shell
 tmux kill-session -t amazon-ssm-agent 2> /dev/null || true
