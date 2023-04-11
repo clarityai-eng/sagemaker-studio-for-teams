@@ -375,7 +375,7 @@ debug_job(5678)
 }
 ```
 
-3) Launch the job and inspect the logs. You should see something like
+3) Launch the job with the `arn:aws:iam::<account>:role/sagemaker/datascience-<your user name>` execution role and inspect the logs. You should see something like
 
 ```
 Connect to this instance from your local machine with
