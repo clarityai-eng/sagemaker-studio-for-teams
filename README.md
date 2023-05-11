@@ -308,6 +308,21 @@ In general, you should always select an image with the version of Python require
 
   Make sure that you have no `default` credentials in your `~/.aws/credentials` file: these will override the SageMaker execution role policies.
 
+* I can connect with `ssh` from the command line, but Visual Studio Code complains that it can't find `aws` when I try to connect via the Remote Explorer.
+
+  This is likely to do with how you have set up your shell. A simple fix is to maually edit the `~/.ssh/config` file and replace
+
+  ```bash
+    ProxyCommand aws ssm start-session --target %h --document-name AWS-StartSSHSession --parameters portNumber=%p --profile=sagemaker
+  ```
+
+  with
+
+  ```bash
+    ProxyCommand bash -c "aws ssm start-session --target %h --document-name AWS-StartSSHSession --parameters portNumber=%p --profile=sagemaker"
+  ```
+  where you should replace `bash` with whatever shell you are using.
+
 ## Appendix: running Jupyter notebooks without a KernelGateway instance
 
 Sometimes it is handy to be able to run a lightweight Jupyter notebook without spinning up a KernelGateway instance. A way to do this is as follows.
