@@ -45,7 +45,7 @@ variable "instance_type" {
 variable "volume_size" {
   description = "EBS disk size"
   type        = string
-  default     = "30"
+  default     = "120"
 }
 
 variable "sagemaker_domain_name" {

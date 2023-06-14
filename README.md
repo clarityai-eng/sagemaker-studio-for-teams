@@ -295,6 +295,21 @@ aws ssm update-service-setting \
 
 In general, you should always select an image with the version of Python required by your project (i.e., specified in the `Pipfile`) already installed. Nevertheless, you might still run into some weird looking problems.
 
+* "When I open a terminal from Visual Studio Code, PyCharm or SSH, `direnv` doesn't work"
+
+  The reason for this is because `.profile` is not run on shell startup, but `.bashrc` is. A recommended solution is to add these lines to your `~/.bashrc` script:
+
+  ```bash
+  if [ -f ~/.profile ];
+  then
+      .  ~/.profile;
+  fi
+  ```  
+
+* "When I open a terminal from Visual Studio Code, PyCharm or SSH, `docker` doesn't work"
+
+  This is because the Docker engine runs remotely over SSM and this requires the SageMaker execution role to work. Unfortunately, this is not inherited by the SSH session. For now, the best thing to do is use the SageMaker Studio web application to open an image terminal for this.
+
 * `RuntimeError: no .dist-info at ...`
 
   As all the containers are sharing the same home directory, your user Python can get in a bit of a mess, particularly if you are mixing different image types. Run `rm -rf /root/.local/share/virtualenv` to remove your user Python versions.
