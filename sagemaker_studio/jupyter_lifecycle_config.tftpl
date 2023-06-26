@@ -1,5 +1,4 @@
 #!/bin/bash
-set -eux
 
 # adapted from https://github.com/aws-samples/sagemaker-studio-lifecycle-config-examples/blob/main/scripts/set-git-credentials/on-jupyter-server-start.sh
 
@@ -64,4 +63,4 @@ EOL
 
 chmod +x ~/.aws-credential-helper.py
 git config --global credential.helper ~/.aws-credential-helper.py
-pip install boto3
+pip install --index-url https://pypi.org/simple boto3
