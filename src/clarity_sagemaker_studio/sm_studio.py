@@ -163,7 +163,7 @@ class SageMakerStudio:
             uid = self.client.describe_user_profile(
                 DomainId=self.domain_id, UserProfileName=user_profile_name
             )["HomeEfsFileSystemUid"]
-            print(f"User: {user_profile_name} ({du.get(uid, '0K')})")
+            print(f"User: {user_profile_name} {uid} ({du.get(uid, '0K')})")
             self.status(user_profile_name=user_profile_name, space_name=None, all=True)
 
         for space in self.with_paging(
@@ -173,7 +173,7 @@ class SageMakerStudio:
             uid = self.client.describe_space(
                 DomainId=self.domain_id, SpaceName=space_name
             )["HomeEfsFileSystemUid"]
-            print(f"Space: {space_name} ({du.get(uid, '0K')})")
+            print(f"Space: {space_name} {uid} ({du.get(uid, '0K')})")
             self.status(user_profile_name=None, space_name=space_name, all=True)
 
     def list_spaces(self):
