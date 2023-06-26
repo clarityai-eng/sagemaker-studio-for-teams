@@ -75,18 +75,20 @@ class SageMakerStudio:
         print(target)
         print(f"\u001b]8;;{target}\u001b\\{text}\u001b]8;;\u001b\\")
 
-    def down(self, space_name=None):
+    def down(self, user_profile_name=None, space_name=None, jupyter=False):
+        if user_profile_name is None:
+            user_profile_name = self.user_profile_name
         while True:
-            apps = self.get_apps(
-                user_profile_name=self.user_profile_name, space_name=space_name
-            )
+            apps = list(self.get_apps(
+                user_profile_name=user_profile_name, space_name=space_name
+            ))
             if (
                 len(
                     [
                         app
                         for app in apps
                         if app["Status"] == "Pending"
-                        and app["AppType"] != "JupyterServer"
+                        and (jupyter or app["AppType"] != "JupyterServer")
                     ]
                 )
                 == 0
@@ -94,11 +96,13 @@ class SageMakerStudio:
                 break
             sleep(1)
         for app in apps:
-            if app["Status"] in ["InService"] and app["AppType"] != "JupyterServer":
+            if app["Status"] in ["InService"] and (
+                jupyter or app["AppType"] != "JupyterServer"
+            ):
                 if space_name is None:
                     self.client.delete_app(
                         DomainId=self.domain_id,
-                        UserProfileName=self.user_profile_name,
+                        UserProfileName=user_profile_name,
                         AppType=app["AppType"],
                         AppName=app["AppName"],
                     )
@@ -109,6 +113,28 @@ class SageMakerStudio:
                         AppType=app["AppType"],
                         AppName=app["AppName"],
                     )
+                print(f"Deleted app {app['AppName']} for {user_profile_name} or {space_name}")
+
+    def down_all(self):
+        if (
+            input(
+                "This will shut down all apps for all users and spaces, are you sure? (y/n) "
+            )
+            == "y"
+        ):
+            for user_profile in self.with_paging(
+                "UserProfiles",
+                self.client.list_user_profiles,
+                DomainIdEquals=self.domain_id,
+            ):
+                self.down(
+                    user_profile_name=user_profile["UserProfileName"], jupyter=True
+                )
+
+            for space in self.with_paging(
+                "Spaces", self.client.list_spaces, DomainIdEquals=self.domain_id
+            ):
+                self.down(space_name=space["SpaceName"], jupyter=True)
 
     def delete(self, space_name):
         if (
@@ -196,7 +222,7 @@ def main():
         prog="sm_studio", description="Start / stop SageMaker Studio instances"
     )
     parser.add_argument(
-        "command", help="up | down | delete | status | status_all | list_spaces"
+        "command", help="up | down | down_all | delete | status | status_all | list_spaces | aws"
     )
     parser.add_argument(
         "--space_name",
@@ -231,6 +257,8 @@ def main():
         sagemaker_studio.up(space_name=args.space_name)
     elif args.command == "down":
         sagemaker_studio.down(space_name=args.space_name)
+    elif args.command == "down_all":
+        sagemaker_studio.down_all()
     elif args.command == "delete":
         if args.space_name is None:
             raise ValueError("You must specify a space_name to delete")
