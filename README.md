@@ -139,6 +139,22 @@ If you `pip install python-dotenv` in the relevant kernel, you will be able to a
 %dotenv
 ```
 
+### Tip
+
+Installing python packages on the EFS is very slow but has the advantage that you only need to do it once. If you need to iterate quickly in order to get it working, you can do the following:
+
+```bash
+export WORKON_HOME=/tmp
+pipenv install
+```
+
+which is much faster as it will install the packages on the local EBS volume. Then you can make it permanent with
+
+```bash
+mv `pipenv --venv` ~/.local/share/virtualenvs/
+export WORKON_HOME=
+```
+
 ## Spaces
 
 A new feature of AWS SageMaker Studio allows you to collaborate with others in a shared "space". One way to do this is to share a notebook from within SageMaker Studio, but this only copies the notebook to the shared space and not the Python environment. A better option is to launch a space with the command
