@@ -113,7 +113,6 @@ class SageMakerStudio:
                         AppType=app["AppType"],
                         AppName=app["AppName"],
                     )
-                print(f"Deleted app {app['AppName']} for {user_profile_name} or {space_name}")
 
     def down_all(self):
         if (
