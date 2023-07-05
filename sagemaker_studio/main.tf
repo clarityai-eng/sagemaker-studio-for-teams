@@ -25,6 +25,20 @@ resource "aws_sagemaker_domain" "this" {
       notebook_output_option = "Allowed"
       s3_output_path         = "s3://sagemaker-studio-${lower(var.domain_name)}-${random_pet.name.id}"
     }
+    canvas_app_settings {
+      model_register_settings {
+        cross_account_model_register_role_arn = ""
+        status                                = "DISABLED"
+      }
+    }
+    jupyter_server_app_settings {
+      default_resource_spec {
+        instance_type               = "system"
+        lifecycle_config_arn        = ""
+        sagemaker_image_arn         = "arn:aws:sagemaker:eu-central-1:936697816551:image/jupyter-server-3"
+        sagemaker_image_version_arn = ""
+      }
+    }    
   }
 
   default_space_settings {
