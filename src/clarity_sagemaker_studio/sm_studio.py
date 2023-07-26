@@ -1,5 +1,8 @@
 import argparse
+import os
 import re
+import subprocess
+import sys
 from time import sleep
 
 import boto3
@@ -74,6 +77,20 @@ class SageMakerStudio:
         target = response["AuthorizedUrl"]
         print(target)
         print(f"\u001b]8;;{target}\u001b\\{text}\u001b]8;;\u001b\\")
+
+        try:
+            if sys.platform == "win32":
+                os.startfile(target)
+            elif sys.platform == "darwin":
+                subprocess.Popen(["open", target])
+            else:
+                subprocess.Popen(
+                    ["xdg-open", target],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                )
+        except OSError:
+            pass
 
     def down(self, user_profile_name=None, space_name=None, jupyter=False):
         if user_profile_name is None:
