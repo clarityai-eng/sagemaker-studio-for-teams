@@ -10,7 +10,7 @@ variable "region" {
 }
 
 variable "key_filename" {
-  description = "Filname to store private key"
+  description = "Filename to store private key"
   type        = string
 }
 
