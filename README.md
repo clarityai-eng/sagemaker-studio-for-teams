@@ -341,7 +341,7 @@ In general, you should always select an image with the version of Python require
 
 * I can connect with `ssh` from the command line, but Visual Studio Code complains that it can't find `aws` when I try to connect via the Remote Explorer.
 
-  This is likely to do with how you have set up your shell. A simple fix is to maually edit the `~/.ssh/config` file and replace
+  This is likely to do with how you have set up your shell. A simple fix is to manually edit the `~/.ssh/config` file and replace
 
   ```bash
     ProxyCommand aws ssm start-session --target %h --document-name AWS-StartSSHSession --parameters portNumber=%p --profile=sagemaker
@@ -350,8 +350,15 @@ In general, you should always select an image with the version of Python require
   with
 
   ```bash
-    ProxyCommand bash -c "aws ssm start-session --target %h --document-name AWS-StartSSHSession --parameters portNumber=%p --profile=sagemaker"
+    ProxyCommand bash -c 'aws ssm start-session --target %h --document-name AWS-StartSSHSession --parameters portNumber=%p --profile=sagemaker'
   ```
+
+  or (for some Macs)
+
+  ```bash
+    ProxyCommand bash -c 'export PATH=$PATH:/usr/local/bin; aws ssm start-session --target %h --document-name AWS-StartSSHSession --parameters portNumber=%p --profile=sagemaker'
+  ```
+
   where you should replace `bash` with whatever shell you are using.
 
 ## Appendix: running Jupyter notebooks without a KernelGateway instance
