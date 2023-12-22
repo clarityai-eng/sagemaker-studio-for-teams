@@ -38,7 +38,9 @@ resource "aws_sagemaker_domain" "this" {
         sagemaker_image_arn         = "arn:aws:sagemaker:eu-central-1:936697816551:image/jupyter-server-3"
         sagemaker_image_version_arn = ""
       }
-    }    
+    }
+    studio_web_portal = "ENABLED"
+    default_landing_uri = "app:JupyterServer:"
   }
 
   default_space_settings {

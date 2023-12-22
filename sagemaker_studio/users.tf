@@ -13,6 +13,8 @@ resource "aws_sagemaker_user_profile" "user" {
       }
       lifecycle_config_arns = [aws_sagemaker_studio_lifecycle_config.jupyter[count.index].arn]
     }
+    studio_web_portal = "ENABLED"
+    default_landing_uri = "app:JupyterServer:"
   }
 }
 

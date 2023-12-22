@@ -52,7 +52,7 @@ class SageMakerStudio:
             DomainIdEquals=self.domain_id,
         )
 
-    def up(self, space_name=None):
+    def up(self, space_name=None, new=False):
         if space_name is not None:
             spaces = self.with_paging(
                 "Spaces", self.client.list_spaces, DomainIdEquals=self.domain_id
@@ -71,6 +71,7 @@ class SageMakerStudio:
             response = self.client.create_presigned_domain_url(
                 DomainId=self.domain_id,
                 UserProfileName=self.user_profile_name,
+                LandingUri="studio::" if new else "app:JupyterServer:"
             )
 
         text = "Click here to open SageMaker Studio"
@@ -251,6 +252,11 @@ def main():
         type=str,
         help="Defaults to role_session_name in your AWS config",
     )
+    parser.add_argument(
+        "--new",
+        action="store_true",
+        help="Use new Studio (defaults to Studio Classic)",
+    )
     args = parser.parse_args()
 
     session = boto3.Session(profile_name="sagemaker")
@@ -270,7 +276,7 @@ def main():
     )
 
     if args.command == "up":
-        sagemaker_studio.up(space_name=args.space_name)
+        sagemaker_studio.up(space_name=args.space_name, new=args.new)
     elif args.command == "down":
         sagemaker_studio.down(space_name=args.space_name)
     elif args.command == "down_all":

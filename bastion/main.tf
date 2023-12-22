@@ -48,21 +48,9 @@ resource "aws_instance" "ec2" {
     volume_size = var.volume_size
   }
 
-  provisioner "local-exec" {
-    command = <<-ENDCMD
-      sleep 30
-      AWS_PROFILE=${var.profile} \
-      ssh -i ${var.key_filename} \
-      ubuntu@${aws_instance.ec2.id} \
-      -o StrictHostKeyChecking=accept-new \
-      -o ProxyCommand="aws ssm start-session --target %h --document-name AWS-StartSSHSession --parameters portNumber=%p" \
-      <<-ENDSSH
-        ${templatefile("${path.module}/bootstrap.tftpl", {
-            efs_ip = data.external.efs.result.ip
-        })}
-      ENDSSH
-    ENDCMD
-  }
+  user_data = templatefile("${path.module}/bootstrap.tftpl", {
+    efs_ip = data.external.efs.result.ip
+  })
 
   lifecycle {
     replace_triggered_by = [
