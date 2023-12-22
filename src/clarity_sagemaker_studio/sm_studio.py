@@ -71,7 +71,7 @@ class SageMakerStudio:
             response = self.client.create_presigned_domain_url(
                 DomainId=self.domain_id,
                 UserProfileName=self.user_profile_name,
-                LandingUri="studio::" if new else "app:JupyterServer:"
+                LandingUri="studio::" if new else "app:JupyterServer:",
             )
 
         text = "Click here to open SageMaker Studio"
@@ -97,9 +97,11 @@ class SageMakerStudio:
         if user_profile_name is None:
             user_profile_name = self.user_profile_name
         while True:
-            apps = list(self.get_apps(
-                user_profile_name=user_profile_name, space_name=space_name
-            ))
+            apps = list(
+                self.get_apps(
+                    user_profile_name=user_profile_name, space_name=space_name
+                )
+            )
             if (
                 len(
                     [
@@ -165,13 +167,13 @@ class SageMakerStudio:
                     AppName="default",
                     AppType="JupyterServer",
                 )
-            except botocore.exceptions.ClientError:
+                self.client.delete_space(SpaceName=space_name, DomainId=self.domain_id)
+                uid = self.client.describe_space(
+                    DomainId=self.domain_id, SpaceName=space_name
+                )["HomeEfsFileSystemUid"]
+                self.bastion.execute_commands([f"rm -rf /mnt/efs/{int(uid)}"])
+            except (botocore.exceptions.ClientError, KeyError):
                 pass
-            self.client.delete_space(SpaceName=space_name, DomainId=self.domain_id)
-            uid = self.client.describe_space(
-                DomainId=self.domain_id, SpaceName=space_name
-            )["HomeEfsFileSystemUid"]
-            self.bastion.execute_commands([f"rm -rf /mnt/efs/{int(uid)}"])
             print(f"Deleted space {space_name}")
 
     def status(self, user_profile_name, space_name=None, all=False):
@@ -213,10 +215,13 @@ class SageMakerStudio:
             "Spaces", self.client.list_spaces, DomainIdEquals=self.domain_id
         ):
             space_name = space["SpaceName"]
-            uid = self.client.describe_space(
-                DomainId=self.domain_id, SpaceName=space_name
-            )["HomeEfsFileSystemUid"]
-            print(f"Space: {space_name} {uid} ({du.get(uid, '0K')})")
+            try:
+                uid = self.client.describe_space(
+                    DomainId=self.domain_id, SpaceName=space_name
+                )["HomeEfsFileSystemUid"]
+                print(f"Space: {space_name} {uid} ({du.get(uid, '0K')})")
+            except KeyError:
+                print(f"Space: {space_name}")
             self.status(user_profile_name=None, space_name=space_name, all=True)
 
     def list_spaces(self):
@@ -239,7 +244,8 @@ def main():
         prog="sm_studio", description="Start / stop SageMaker Studio instances"
     )
     parser.add_argument(
-        "command", help="up | down | down_all | delete | status | status_all | list_spaces | aws"
+        "command",
+        help="up | down | down_all | delete | status | status_all | list_spaces | aws",
     )
     parser.add_argument(
         "--space_name",
