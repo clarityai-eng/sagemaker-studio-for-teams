@@ -167,12 +167,15 @@ class SageMakerStudio:
                     AppName="default",
                     AppType="JupyterServer",
                 )
-                self.client.delete_space(SpaceName=space_name, DomainId=self.domain_id)
+            except botocore.exceptions.ClientError:
+                pass
+            self.client.delete_space(SpaceName=space_name, DomainId=self.domain_id)
+            try:
                 uid = self.client.describe_space(
                     DomainId=self.domain_id, SpaceName=space_name
                 )["HomeEfsFileSystemUid"]
                 self.bastion.execute_commands([f"rm -rf /mnt/efs/{int(uid)}"])
-            except (botocore.exceptions.ClientError, KeyError):
+            except KeyError:
                 pass
             print(f"Deleted space {space_name}")
 
