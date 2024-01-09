@@ -398,7 +398,7 @@ Sometimes it is handy to be able to run a lightweight Jupyter notebook without s
 
 Although the purpose of this repo is to make SageMaker Studio a comfortable environment for development whether you are doing Machine Learning or not, it may well be the case that you are launching SageMaker ML jobs and want to debug them. This is possible with a few small changes to the code that is packaged up to run in the job.
 
-1) Add `git+https://github.com/clarityai-eng/sagemaker-studio-for-teams.git` to the `requirements.txt` file.
+1) Add `sagemaker` and `git+https://github.com/clarityai-eng/sagemaker-studio-for-teams.git` to the `requirements.txt` file.
 
 2) Add the following lines to the entry point of your script:
 
