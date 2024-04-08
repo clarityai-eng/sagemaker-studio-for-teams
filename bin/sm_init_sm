@@ -16,6 +16,10 @@ sed -i "/AuthenticationMethods/d" /etc/ssh/sshd_config
 echo "AuthenticationMethods publickey" >> /etc/ssh/sshd_config
 /etc/init.d/ssh restart > /dev/null
 
+# needed for VSCode to be able to install remotely
+sed -i '/export TAR_OPTIONS=--no-same-owner/d' ~/.profile
+echo 'export TAR_OPTIONS=--no-same-owner' >> ~/.profile
+
 # install AWS Session Manager plugin
 if ! command -v session-manager-plugin &> /dev/null; then
     curl -sS -o /tmp/session-manager-plugin.deb "https://s3.amazonaws.com/session-manager-downloads/plugin/latest/ubuntu_64bit/session-manager-plugin.deb"
